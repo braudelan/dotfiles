@@ -1,0 +1,1844 @@
+#+title: My Emacs configuration files
+#+startup: overview fold hidestars
+* Spacemacs
+** How to set up =spacemacs= with =chemacs=
+1. Clone spacemacs into any directory (e.g. ~~/emacs-configs/my-spacemacs/~).
+2. Tangle [[*~init~ file][~init~ file]] and [[*User configuration file][User configuration file]] into any directory (e.g. ~user-config~) inside ~my-spacemacs~.
+4. Associate ~~/emacs-configs/my-spacemacs/~ with the ~user-emacs-directory~ variable:
+   #+begin_src emacs-lisp
+     (user-emacs-directory . "~/emacs-configs/my-spacemacs")
+   #+end_src
+5. Define ~~/emacs-configs/my-spacemacs/user-config/~ as ~SPACEMACSDIR~ environment:
+   #+begin_src emacs-lisp
+     (env . (("SPACEMACSDIR" . "~/emacs-configs/my-spacemacs/user-config/")))
+   #+end_src 
+
+**  ~init~ file
+
+
+*** Frequently tweaked sections
+:properties:
+:header-args:emacs-lisp: :tangle no
+:end:
+#+name: layers-and-additional-packages
+#+begin_src emacs-lisp #:tangle no
+     ;; List of configuration layers to load.
+     dotspacemacs-configuration-layers
+     '(google-calendar
+       html
+       javascript
+       (python :variables
+               python-test-runner 'pytest)
+       journal ;; added into the ~private~ directory
+       auto-completion
+       theming
+       ;; better-defaults
+       emacs-lisp
+       git
+       helm
+       lsp
+       ;; markdown
+       multiple-cursors
+       org
+       (shell :variables
+              shell-default-height 30
+              shell-default-position 'bottom)
+       spell-checking
+       (ess :variables
+            ess-r-backend 'lsp
+            ess-assign-key "\M--")
+       ;; syntax-checking
+       ;; version-control
+       treemacs)
+
+
+     ;; List of additional packages that will be installed without being wrapped
+     ;; in a layer (generally the packages are installed only and should still be
+     ;; loaded using load/require/use-package in the user-config section below in
+     ;; this file). If you need some configuration for these packages, then
+     ;; consider creating a layer. You can also put the configuration in
+     ;; `dotspacemacs/user-config'. To use a local version of a package, use the
+     ;; `:location' property: '(your-package :location "~/path/to/your-package/")
+     ;; Also include the dependencies as they will not be resolved automatically.
+     dotspacemacs-additional-packages '(
+                                        (hideshow-org :location "~/emacs-configs/.spacemacs.M23.22/private/")
+                                        (eaf :location "~/emacs-configs/emacs-application-framework/")
+                                        ox-reveal
+                                        polymode
+                                        poly-R
+                                        poly-noweb
+                                        poly-markdown
+                                        ox-pandoc
+                                        org-gcal
+                                        selectrum
+                                        marginalia
+                                        zen-mode
+                                        helpful
+                                        dictionary
+                                        graphviz-dot-mode
+                                        org-attach-screenshot
+                                        (ox-moderncv :location "~/emacs-configs/.spacemacs.M23.22/private/org-cv/")
+                                        (ox-awesomecv :location "~/emacs-configs/.spacemacs.M23.22/private/org-cv/")
+                                        (ox-altacv :location "~/emacs-configs/.spacemacs.M23.22/private/org-cv/")
+                                        powerthesaurus
+                                        jupyter
+                                        (temp-mode :location "~/emacs-configs/.spacemacs.M23.22/private")
+                                        (ox-ipynb :location "~/emacs-configs/.spacemacs.M23.22/private")
+                                        )
+                                        #+end_src
+                                        
+
+*** The main functions
+:properties:
+:header-args:emacs-lisp: :tangle "~/emacs-configs/.spacemacs-temp/user-config/init.el" :mkdirp t :noweb yes
+:end:
+
+  #+begin_src emacs-lisp
+    ;; -*- mode: emacs-lisp; lexical-binding: t -*-
+    ;; This file is loaded by Spacemacs at startup.
+      (defun dotspacemacs/layers ()
+        "Layer configuration:
+      This function should only modify configuration layer settings."
+        (setq-default
+         ;; Base distribution to use. This is a layer contained in the directory
+         ;; `+distribution'. For now available distributions are `spacemacs-base'
+         ;; or `spacemacs'. (default 'spacemacs)
+         dotspacemacs-distribution 'spacemacs
+
+         ;; Lazy installation of layers (i.e. layers are installed only when a file
+         ;; with a supported type is opened). Possible values are `all', `unused'
+         ;; and `nil'. `unused' will lazy install only unused layers (i.e. layers
+         ;; not listed in variable `dotspacemacs-configuration-layers'), `all' will
+         ;; lazy install any layer that support lazy installation even the layers
+         ;; listed in `dotspacemacs-configuration-layers'. `nil' disable the lazy
+         ;; installation feature and you have to explicitly list a layer in the
+         ;; variable `dotspacemacs-configuration-layers' to install it.
+         ;; (default 'unused)
+         dotspacemacs-enable-lazy-installation 'unused
+
+         ;; If non-nil then Spacemacs will ask for confirmation before installing
+         ;; a layer lazily. (default t)
+         dotspacemacs-ask-for-lazy-installation t
+
+         ;; List of additional paths where to look for configuration layers.
+         ;; Paths must have a trailing slash (i.e. `~/.mycontribs/')
+         dotspacemacs-configuration-layer-path '()
+
+         <<layers-and-additional-packages>>
+
+
+         ;; A list of packages that cannot be updated.
+         dotspacemacs-frozen-packages '()
+
+         ;; A list of packages that will not be installed and loaded.
+         dotspacemacs-excluded-packages '()
+
+         ;; Defines the behaviour of Spacemacs when installing packages.
+         ;; Possible values are `used-only', `used-but-keep-unused' and `all'.
+         ;; `used-only' installs only explicitly used packages and deletes any unused
+         ;; packages as well as their unused dependencies. `used-but-keep-unused'
+         ;; installs only the used packages but won't delete unused ones. `all'
+         ;; installs *all* packages supported by Spacemacs and never uninstalls them.
+         ;; (default is `used-only')
+         dotspacemacs-install-packages 'used-only))
+
+      (defun dotspacemacs/init ()
+        "Initialization:
+      This function is called at the very beginning of Spacemacs startup,
+      before layer configuration.
+      It should only modify the values of Spacemacs settings."
+        ;; This setq-default sexp is an exhaustive list of all the supported
+        ;; spacemacs settings.
+        (setq-default
+         ;; If non-nil then enable support for the portable dumper. You'll need to
+         ;; compile Emacs 27 from source following the instructions in file
+         ;; EXPERIMENTAL.org at to root of the git repository.
+         ;;
+         ;; WARNING: pdumper does not work with Native Compilation, so it's disabled
+         ;; regardless of the following setting when native compilation is in effect.
+         ;;
+         ;; (default nil)
+         dotspacemacs-enable-emacs-pdumper nil
+
+         ;; Name of executable file pointing to emacs 27+. This executable must be
+         ;; in your PATH.
+         ;; (default "emacs")
+         dotspacemacs-emacs-pdumper-executable-file "emacs"
+
+         ;; Name of the Spacemacs dump file. This is the file will be created by the
+         ;; portable dumper in the cache directory under dumps sub-directory.
+         ;; To load it when starting Emacs add the parameter `--dump-file'
+         ;; when invoking Emacs 27.1 executable on the command line, for instance:
+         ;;   ./emacs --dump-file=$HOME/.emacs.d/.cache/dumps/spacemacs-27.1.pdmp
+         ;; (default (format "spacemacs-%s.pdmp" emacs-version))
+         dotspacemacs-emacs-dumper-dump-file (format "spacemacs-%s.pdmp" emacs-version)
+
+         ;; If non-nil ELPA repositories are contacted via HTTPS whenever it's
+         ;; possible. Set it to nil if you have no way to use HTTPS in your
+         ;; environment, otherwise it is strongly recommended to let it set to t.
+         ;; This variable has no effect if Emacs is launched with the parameter
+         ;; `--insecure' which forces the value of this variable to nil.
+         ;; (default t)
+         dotspacemacs-elpa-https t
+
+         ;; Maximum allowed time in seconds to contact an ELPA repository.
+         ;; (default 5)
+         dotspacemacs-elpa-timeout 5
+
+         ;; Set `gc-cons-threshold' and `gc-cons-percentage' when startup finishes.
+         ;; This is an advanced option and should not be changed unless you suspect
+         ;; performance issues due to garbage collection operations.
+         ;; (default '(100000000 0.1))
+         dotspacemacs-gc-cons '(100000000 0.1)
+
+         ;; Set `read-process-output-max' when startup finishes.
+         ;; This defines how much data is read from a foreign process.
+         ;; Setting this >= 1 MB should increase performance for lsp servers
+         ;; in emacs 27.
+         ;; (default (* 1024 1024))
+         dotspacemacs-read-process-output-max (* 1024 1024)
+
+         ;; If non-nil then Spacelpa repository is the primary source to install
+         ;; a locked version of packages. If nil then Spacemacs will install the
+         ;; latest version of packages from MELPA. Spacelpa is currently in
+         ;; experimental state please use only for testing purposes.
+         ;; (default nil)
+         dotspacemacs-use-spacelpa nil
+
+         ;; If non-nil then verify the signature for downloaded Spacelpa archives.
+         ;; (default t)
+         dotspacemacs-verify-spacelpa-archives t
+
+         ;; If non-nil then spacemacs will check for updates at startup
+         ;; when the current branch is not `develop'. Note that checking for
+         ;; new versions works via git commands, thus it calls GitHub services
+         ;; whenever you start Emacs. (default nil)
+         dotspacemacs-check-for-update nil
+
+         ;; If non-nil, a form that evaluates to a package directory. For example, to
+         ;; use different package directories for different Emacs versions, set this
+         ;; to `emacs-version'. (default 'emacs-version)
+         dotspacemacs-elpa-subdirectory 'emacs-version
+
+         ;; One of `vim', `emacs' or `hybrid'.
+         ;; `hybrid' is like `vim' except that `insert state' is replaced by the
+         ;; `hybrid state' with `emacs' key bindings. The value can also be a list
+         ;; with `:variables' keyword (similar to layers). Check the editing styles
+         ;; section of the documentation for details on available variables.
+         ;; (default 'vim)
+         dotspacemacs-editing-style 'emacs
+
+         ;; If non-nil show the version string in the Spacemacs buffer. It will
+         ;; appear as (spacemacs version)@(emacs version)
+         ;; (default t)
+         dotspacemacs-startup-buffer-show-version t
+
+         ;; Specify the startup banner. Default value is `official', it displays
+         ;; the official spacemacs logo. An integer value is the index of text
+         ;; banner, `random' chooses a random text banner in `core/banners'
+         ;; directory. A string value must be a path to an image format supported
+         ;; by your Emacs build.
+         ;; If the value is nil then no banner is displayed. (default 'official)
+         dotspacemacs-startup-banner 'official
+
+         ;; List of items to show in startup buffer or an association list of
+         ;; the form `(list-type . list-size)`. If nil then it is disabled.
+         ;; Possible values for list-type are:
+         ;; `recents' `recents-by-project' `bookmarks' `projects' `agenda' `todos'.
+         ;; List sizes may be nil, in which case
+         ;; `spacemacs-buffer-startup-lists-length' takes effect.
+         ;; The exceptional case is `recents-by-project', where list-type must be a
+         ;; pair of numbers, e.g. `(recents-by-project . (7 .  5))', where the first
+         ;; number is the project limit and the second the limit on the recent files
+         ;; within a project.
+         dotspacemacs-startup-lists '((recents . 5)
+                                      (projects . 7))
+
+         ;; True if the home buffer should respond to resize events. (default t)
+         dotspacemacs-startup-buffer-responsive t
+
+         ;; Show numbers before the startup list lines. (default t)
+         dotspacemacs-show-startup-list-numbers t
+
+         ;; The minimum delay in seconds between number key presses. (default 0.4)
+         dotspacemacs-startup-buffer-multi-digit-delay 0.4
+
+         ;; If non-nil, show file icons for entries and headings on Spacemacs home buffer.
+         ;; This has no effect in terminal or if "all-the-icons" package or the font
+         ;; is not installed. (default nil)
+         dotspacemacs-startup-buffer-show-icons nil
+
+         ;; Default major mode for a new empty buffer. Possible values are mode
+         ;; names such as `text-mode'; and `nil' to use Fundamental mode.
+         ;; (default `text-mode')
+         dotspacemacs-new-empty-buffer-major-mode 'text-mode
+
+         ;; Default major mode of the scratch buffer (default `text-mode')
+         dotspacemacs-scratch-mode 'text-mode
+
+         ;; If non-nil, *scratch* buffer will be persistent. Things you write down in
+         ;; *scratch* buffer will be saved and restored automatically.
+         dotspacemacs-scratch-buffer-persistent nil
+
+         ;; If non-nil, `kill-buffer' on *scratch* buffer
+         ;; will bury it instead of killing.
+         dotspacemacs-scratch-buffer-unkillable nil
+
+         ;; Initial message in the scratch buffer, such as "Welcome to Spacemacs!"
+         ;; (default nil)
+         dotspacemacs-initial-scratch-message nil
+
+         ;; List of themes, the first of the list is loaded when spacemacs starts.
+         ;; Press `SPC T n' to cycle to the next theme in the list (works great
+         ;; with 2 themes variants, one dark and one light)
+         dotspacemacs-themes '(solarized-selenized-black
+                               solarized-selenized-dark
+                               solarized-selenized-light
+                               solarized-selenized-white
+                               sanityinc-solarized-light
+                               solarized
+                               spacemacs-dark
+                               spacemacs-light
+                               gruvbox
+                               sanityinc-solarized-dark)
+
+         ;; Set the theme for the Spaceline. Supported themes are `spacemacs',
+         ;; `all-the-icons', `custom', `doom', `vim-powerline' and `vanilla'. The
+         ;; first three are spaceline themes. `doom' is the doom-emacs mode-line.
+         ;; `vanilla' is default Emacs mode-line. `custom' is a user defined themes,
+         ;; refer to the DOCUMENTATION.org for more info on how to create your own
+         ;; spaceline theme. Value can be a symbol or list with additional properties.
+         ;; (default '(spacemacs :separator wave :separator-scale 1.5))
+         dotspacemacs-mode-line-theme '(spacemacs :separator wave :separator-scale 1.5)
+
+         ;; If non-nil the cursor color matches the state color in GUI Emacs.
+         ;; (default t)
+         dotspacemacs-colorize-cursor-according-to-state t
+
+         ;; Default font or prioritized list of fonts. The `:size' can be specified as
+         ;; a non-negative integer (pixel size), or a floating-point (point size).
+         ;; Point size is recommended, because it's device independent. (default 10.0)
+         dotspacemacs-default-font '(
+                                     "Source Code Pro"
+                                     :size 15.0
+                                     :weight normal
+                                     :width normal
+                                     )
+
+         ;; The leader key (default "SPC")
+         dotspacemacs-leader-key "SPC"
+
+         ;; The key used for Emacs commands `M-x' (after pressing on the leader key).
+         ;; (default "SPC")
+         dotspacemacs-emacs-command-key "SPC"
+
+         ;; The key used for Vim Ex commands (default ":")
+         dotspacemacs-ex-command-key ":"
+
+         ;; The leader key accessible in `emacs state' and `insert state'
+         ;; (default "M-m")
+         dotspacemacs-emacs-leader-key "M-m"
+
+         ;; Major mode leader key is a shortcut key which is the equivalent of
+         ;; pressing `<leader> m`. Set it to `nil` to disable it. (default ",")
+         dotspacemacs-major-mode-leader-key ","
+
+         ;; Major mode leader key accessible in `emacs state' and `insert state'.
+         ;; (default "C-M-m" for terminal mode, "<M-return>" for GUI mode).
+         ;; Thus M-RET should work as leader key in both GUI and terminal modes.
+         ;; C-M-m also should work in terminal mode, but not in GUI mode.
+         dotspacemacs-major-mode-emacs-leader-key (if window-system "<M-return>" "C-M-m")
+
+         ;; These variables control whether separate commands are bound in the GUI to
+         ;; the key pairs `C-i', `TAB' and `C-m', `RET'.
+         ;; Setting it to a non-nil value, allows for separate commands under `C-i'
+         ;; and TAB or `C-m' and `RET'.
+         ;; In the terminal, these pairs are generally indistinguishable, so this only
+         ;; works in the GUI. (default nil)
+         dotspacemacs-distinguish-gui-tab nil
+
+         ;; Name of the default layout (default "Default")
+         dotspacemacs-default-layout-name "Default"
+
+         ;; If non-nil the default layout name is displayed in the mode-line.
+         ;; (default nil)
+         dotspacemacs-display-default-layout nil
+
+         ;; If non-nil then the last auto saved layouts are resumed automatically upon
+         ;; start. (default nil)
+         dotspacemacs-auto-resume-layouts nil
+
+         ;; If non-nil, auto-generate layout name when creating new layouts. Only has
+         ;; effect when using the "jump to layout by number" commands. (default nil)
+         dotspacemacs-auto-generate-layout-names nil
+
+         ;; Size (in MB) above which spacemacs will prompt to open the large file
+         ;; literally to avoid performance issues. Opening a file literally means that
+         ;; no major mode or minor modes are active. (default is 1)
+         dotspacemacs-large-file-size 1
+
+         ;; Location where to auto-save files. Possible values are `original' to
+         ;; auto-save the file in-place, `cache' to auto-save the file to another
+         ;; file stored in the cache directory and `nil' to disable auto-saving.
+         ;; (default 'cache)
+         dotspacemacs-auto-save-file-location 'cache
+
+         ;; Maximum number of rollback slots to keep in the cache. (default 5)
+         dotspacemacs-max-rollback-slots 5
+
+         ;; If non-nil, the paste transient-state is enabled. While enabled, after you
+         ;; paste something, pressing `C-j' and `C-k' several times cycles through the
+         ;; elements in the `kill-ring'. (default nil)
+         dotspacemacs-enable-paste-transient-state nil
+
+         ;; Which-key delay in seconds. The which-key buffer is the popup listing
+         ;; the commands bound to the current keystroke sequence. (default 0.4)
+         dotspacemacs-which-key-delay 0.4
+
+         ;; Which-key frame position. Possible values are `right', `bottom' and
+         ;; `right-then-bottom'. right-then-bottom tries to display the frame to the
+         ;; right; if there is insufficient space it displays it at the bottom.
+         ;; (default 'bottom)
+         dotspacemacs-which-key-position 'bottom
+
+         ;; Control where `switch-to-buffer' displays the buffer. If nil,
+         ;; `switch-to-buffer' displays the buffer in the current window even if
+         ;; another same-purpose window is available. If non-nil, `switch-to-buffer'
+         ;; displays the buffer in a same-purpose window even if the buffer can be
+         ;; displayed in the current window. (default nil)
+         dotspacemacs-switch-to-buffer-prefers-purpose nil
+
+         ;; If non-nil a progress bar is displayed when spacemacs is loading. This
+         ;; may increase the boot time on some systems and emacs builds, set it to
+         ;; nil to boost the loading time. (default t)
+         dotspacemacs-loading-progress-bar t
+
+         ;; If non-nil the frame is fullscreen when Emacs starts up. (default nil)
+         ;; (Emacs 24.4+ only)
+         dotspacemacs-fullscreen-at-startup nil
+
+         ;; If non-nil `spacemacs/toggle-fullscreen' will not use native fullscreen.
+         ;; Use to disable fullscreen animations in OSX. (default nil)
+         dotspacemacs-fullscreen-use-non-native nil
+
+         ;; If non-nil the frame is maximized when Emacs starts up.
+         ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
+         ;; (default nil) (Emacs 24.4+ only)
+         dotspacemacs-maximized-at-startup nil
+
+         ;; If non-nil the frame is undecorated when Emacs starts up. Combine this
+         ;; variable with `dotspacemacs-maximized-at-startup' in OSX to obtain
+         ;; borderless fullscreen. (default nil)
+         dotspacemacs-undecorated-at-startup nil
+
+         ;; A value from the range (0..100), in increasing opacity, which describes
+         ;; the transparency level of a frame when it's active or selected.
+         ;; Transparency can be toggled through `toggle-transparency'. (default 90)
+         dotspacemacs-active-transparency 90
+
+         ;; A value from the range (0..100), in increasing opacity, which describes
+         ;; the transparency level of a frame when it's inactive or deselected.
+         ;; Transparency can be toggled through `toggle-transparency'. (default 90)
+         dotspacemacs-inactive-transparency 90
+
+         ;; If non-nil show the titles of transient states. (default t)
+         dotspacemacs-show-transient-state-title t
+
+         ;; If non-nil show the color guide hint for transient state keys. (default t)
+         dotspacemacs-show-transient-state-color-guide t
+
+         ;; If non-nil unicode symbols are displayed in the mode line.
+         ;; If you use Emacs as a daemon and wants unicode characters only in GUI set
+         ;; the value to quoted `display-graphic-p'. (default t)
+         dotspacemacs-mode-line-unicode-symbols t
+
+         ;; If non-nil smooth scrolling (native-scrolling) is enabled. Smooth
+         ;; scrolling overrides the default behavior of Emacs which recenters point
+         ;; when it reaches the top or bottom of the screen. (default t)
+         dotspacemacs-smooth-scrolling t
+
+         ;; Show the scroll bar while scrolling. The auto hide time can be configured
+         ;; by setting this variable to a number. (default t)
+         dotspacemacs-scroll-bar-while-scrolling t
+
+         ;; Control line numbers activation.
+         ;; If set to `t', `relative' or `visual' then line numbers are enabled in all
+         ;; `prog-mode' and `text-mode' derivatives. If set to `relative', line
+         ;; numbers are relative. If set to `visual', line numbers are also relative,
+         ;; but only visual lines are counted. For example, folded lines will not be
+         ;; counted and wrapped lines are counted as multiple lines.
+         ;; This variable can also be set to a property list for finer control:
+         ;; '(:relative nil
+         ;;   :visual nil
+         ;;   :disabled-for-modes dired-mode
+         ;;                       doc-view-mode
+         ;;                       markdown-mode
+         ;;                       org-mode
+         ;;                       pdf-view-mode
+         ;;                       text-mode
+         ;;   :size-limit-kb 1000)
+         ;; When used in a plist, `visual' takes precedence over `relative'.
+         ;; (default nil)
+         dotspacemacs-line-numbers nil
+
+         ;; Code folding method. Possible values are `evil', `origami' and `vimish'.
+         ;; (default 'evil)
+         dotspacemacs-folding-method 'evil
+
+         ;; If non-nil and `dotspacemacs-activate-smartparens-mode' is also non-nil,
+         ;; `smartparens-strict-mode' will be enabled in programming modes.
+         ;; (default nil)
+         dotspacemacs-smartparens-strict-mode nil
+
+         ;; If non-nil smartparens-mode will be enabled in programming modes.
+         ;; (default t)
+         dotspacemacs-activate-smartparens-mode t
+
+         ;; If non-nil pressing the closing parenthesis `)' key in insert mode passes
+         ;; over any automatically added closing parenthesis, bracket, quote, etc...
+         ;; This can be temporary disabled by pressing `C-q' before `)'. (default nil)
+         dotspacemacs-smart-closing-parenthesis nil
+
+         ;; Select a scope to highlight delimiters. Possible values are `any',
+         ;; `current', `all' or `nil'. Default is `all' (highlight any scope and
+         ;; emphasis the current one). (default 'all)
+         dotspacemacs-highlight-delimiters 'all
+
+         ;; If non-nil, start an Emacs server if one is not already running.
+         ;; (default nil)
+         dotspacemacs-enable-server nil
+
+         ;; Set the emacs server socket location.
+         ;; If nil, uses whatever the Emacs default is, otherwise a directory path
+         ;; like \"~/.emacs.d/server\". It has no effect if
+         ;; `dotspacemacs-enable-server' is nil.
+         ;; (default nil)
+         dotspacemacs-server-socket-dir nil
+
+         ;; If non-nil, advise quit functions to keep server open when quitting.
+         ;; (default nil)
+         dotspacemacs-persistent-server nil
+
+         ;; List of search tool executable names. Spacemacs uses the first installed
+         ;; tool of the list. Supported tools are `rg', `ag', `pt', `ack' and `grep'.
+         ;; (default '("rg" "ag" "pt" "ack" "grep"))
+         dotspacemacs-search-tools '("rg" "ag" "pt" "ack" "grep")
+
+         ;; Format specification for setting the frame title.
+         ;; %a - the `abbreviated-file-name', or `buffer-name'
+         ;; %t - `projectile-project-name'
+         ;; %I - `invocation-name'
+         ;; %S - `system-name'
+         ;; %U - contents of $USER
+         ;; %b - buffer name
+         ;; %f - visited file name
+         ;; %F - frame name
+         ;; %s - process status
+         ;; %p - percent of buffer above top of window, or Top, Bot or All
+         ;; %P - percent of buffer above bottom of window, perhaps plus Top, or Bot or All
+         ;; %m - mode name
+         ;; %n - Narrow if appropriate
+         ;; %z - mnemonics of buffer, terminal, and keyboard coding systems
+         ;; %Z - like %z, but including the end-of-line format
+         ;; If nil then Spacemacs uses default `frame-title-format' to avoid
+         ;; performance issues, instead of calculating the frame title by
+         ;; `spacemacs/title-prepare' all the time.
+         ;; (default "%I@%S")
+         dotspacemacs-frame-title-format "%I@%S"
+
+         ;; Format specification for setting the icon title format
+         ;; (default nil - same as frame-title-format)
+         dotspacemacs-icon-title-format nil
+
+         ;; Show trailing whitespace (default t)
+         dotspacemacs-show-trailing-whitespace t
+
+         ;; Delete whitespace while saving buffer. Possible values are `all'
+         ;; to aggressively delete empty line and long sequences of whitespace,
+         ;; `trailing' to delete only the whitespace at end of lines, `changed' to
+         ;; delete only whitespace for changed lines or `nil' to disable cleanup.
+         ;; (default nil)
+         dotspacemacs-whitespace-cleanup nil
+
+         ;; If non-nil activate `clean-aindent-mode' which tries to correct
+         ;; virtual indentation of simple modes. This can interfere with mode specific
+         ;; indent handling like has been reported for `go-mode'.
+         ;; If it does deactivate it here.
+         ;; (default t)
+         dotspacemacs-use-clean-aindent-mode t
+
+         ;; Accept SPC as y for prompts if non-nil. (default nil)
+         dotspacemacs-use-SPC-as-y nil
+
+         ;; If non-nil shift your number row to match the entered keyboard layout
+         ;; (only in insert state). Currently supported keyboard layouts are:
+         ;; `qwerty-us', `qwertz-de' and `querty-ca-fr'.
+         ;; New layouts can be added in `spacemacs-editing' layer.
+         ;; (default nil)
+         dotspacemacs-swap-number-row nil
+
+         ;; Either nil or a number of seconds. If non-nil zone out after the specified
+         ;; number of seconds. (default nil)
+         dotspacemacs-zone-out-when-idle nil
+
+         ;; Run `spacemacs/prettify-org-buffer' when
+         ;; visiting README.org files of Spacemacs.
+         ;; (default nil)
+         dotspacemacs-pretty-docs nil
+
+         ;; If nil the home buffer shows the full path of agenda items
+         ;; and todos. If non-nil only the file name is shown.
+         dotspacemacs-home-shorten-agenda-source nil
+
+         ;; If non-nil then byte-compile some of Spacemacs files.
+         dotspacemacs-byte-compile nil))
+
+      (defun dotspacemacs/user-env ()
+        "Environment variables setup.
+      This function defines the environment variables for your Emacs session. By
+      default it calls `spacemacs/load-spacemacs-env' which loads the environment
+      variables declared in `~/.spacemacs.env' or `~/.spacemacs.d/.spacemacs.env'.
+      See the header of this file for more information."
+        (spacemacs/load-spacemacs-env)
+      )
+
+      (defun dotspacemacs/user-init ()
+        "Initialization for user code:
+      This function is called immediately after `dotspacemacs/init', before layer
+      configuration.
+      It is mostly for variables that should be set before packages are loaded.
+      If you are unsure, try setting them in `dotspacemacs/user-config' first."
+      )
+
+
+      (defun dotspacemacs/user-load ()
+        "Library to load while dumping.
+      This function is called only while dumping Spacemacs configuration. You can
+      `require' or `load' the libraries of your choice that will be included in the
+      dump."
+      )
+
+
+      (defun dotspacemacs/user-config ()
+        "Configuration for user code:
+      This function is called at the very end of Spacemacs startup, after layer
+      configuration.
+      Put your configuration code here, except for variables that should be set
+      before packages are loaded."
+        (let ((user-config (concat dotspacemacs-directory "user-config.el"))
+              (source (concat dotspacemacs-directory "user-config.org")))
+          (when (file-newer-than-file-p source user-config)
+            (message (format "%s has changes. Tangling to %s... " source user-config))
+            (call-process
+             (concat invocation-directory invocation-name)
+             nil nil t
+             "-q" "--batch" "--eval" "(require 'ob-tangle)"
+             "--eval" (format "(org-babel-tangle-file \"%s\")" source)))
+           (load-file user-config))
+      )
+
+
+
+
+
+#+end_src
+
+** User configuration file
+:properties:
+:header-args:emacs-lisp: :tangle  "~/emacs-configs/.spacemacs-temp/user-config/user-config.el" :mkdirp t
+:end:
+
+
+
+*** COMMENT TODOS
+**** TODO Literate config
+   + tangle first level headers as comments (currently only headers immediately above code block are tangled).
+**** TODO key bindings
+   + Go to *current* ~user-config.org~.
+     
+*** General
+**** Packages to load manually
+
+#+begin_src emacs-lisp 
+  (require 'hideshow-org)
+  (require 'ox-reveal)
+
+#+end_src
+
+#+RESULTS:
+: ox-reveal
+
+**** UI preferences
+***** Misc
+  #+begin_src emacs-lisp  
+    (smartparens-global-mode t)
+    (global-visual-line-mode t)
+    (delete-selection-mode t)
+    (global-company-mode t)
+    (global-hl-line-mode t) ; Enable/Disable current line highlight
+
+    ;; treemacs default width
+    (setq treemacs-width 25)
+    (treemacs-peek-mode nil)
+
+    ;; The :init configuration 
+    ;; Must be in the :init section of use-package such that the mode getNs forces loading the package.
+    ;; (marginalia-mode)
+
+   #+end_src
+
+   #+RESULTS:
+   : marginalia-cycle
+
+**** keybindings
+   
+***** Lisp interaction
+    #+begin_src emacs-lisp
+      (define-key lisp-interaction-mode-map (kbd "<C-return>") 'eval-last-sexp)
+      (define-key lisp-interaction-mode-map (kbd "<C-S-return>") 'eval-defun)
+
+    #+end_src
+
+    #+RESULTS:
+    : eval-defun
+ 
+***** Powerthesaurus
+  #+begin_src emacs-lisp
+      (global-set-key (kbd "M-p") 'powerthesaurus-lookup-word-at-point )
+  #+end_src
+  
+***** ~Helpful~, better interface for emacs built-in help
+    #+begin_src emacs-lisp
+      ;; Note that the built-in `describe-function' includes both functions
+      ;; and macros. `helpful-function' is functions only, so we provide
+      ;; `helpful-callable' as a drop-in replacement.
+
+      (global-set-key (kbd "C-h f") #'helpful-callable)
+
+      (global-set-key (kbd "C-h v") #'helpful-variable)
+      (global-set-key (kbd "C-h k") #'helpful-key)
+
+      ;; Lookup the current symbol at point. C-c C-d is a common keybinding
+      ;; for this in lisp modes.
+      (global-set-key (kbd "C-c C-d") #'helpful-at-point)
+
+      ;; Look up *F*unctions (excludes macros).
+      ;;
+      ;; By default, C-h F is bound to `Info-goto-emacs-command-node'. Helpful
+      ;; already links to the manual, if a function is referenced there.
+      (global-set-key (kbd "C-h F") #'helpful-function)
+
+      ;; Look up *C*ommands.
+      ;;
+      ;; By default, C-h C is bound to describe `describe-coding-system'. I
+      ;; don't find this very useful, but it's frequently useful to only
+      ;; look at interactive functions.
+      (global-set-key (kbd "C-h C") #'helpful-command)
+
+    #+end_src 
+
+    #+RESULTS:
+    : helpful-command
+    
+***** Treemacs
+    #+begin_src emacs-lisp
+      (global-set-key (kbd "C-`") 'treemacs)
+      (global-set-key (kbd "C-~") 'treemacs-select-window) ;
+    #+end_src
+**** Character encoding
+#+begin_src emacs-lisp
+  (set-default-coding-systems 'utf-8)
+#+end_src
+
+#+RESULTS:
+: (utf-8-unix . utf-8-unix)
+
+*** Workflow 
+**** Journal (org-journal)
+#+begin_src emacs-lisp
+(setq org-journal-dir "~/todo/journal" )
+#+end_src
+
+#+RESULTS:
+: ~/todo/journal
+
+**** Agenda
+***** General setup
+ #+begin_src emacs-lisp
+   ;; Set the org-agenda directory 
+   (setq elan/org-agenda-directory "~/todo/")
+   ;; (setq org-agenda-files (list elan/org-agenda-directory))
+   (setq org-agenda-files (list elan/org-agenda-directory))
+
+   ;; Show the daily agenda by default.
+   (setq org-agenda-span 'day)
+
+   ;; Hide tasks that are scheduled in the future.
+   (setq org-agenda-todo-ignore-scheduled 'future)
+
+   ;; Use "second" instead of "day" for time comparison.
+   ;; It hides tasks with a scheduled time like "<2020-11-15 Sun 11:30>"
+   (setq org-agenda-todo-ignore-time-comparison-use-seconds t)
+
+   ;; Hide the deadline prewarning prior to scheduled date.
+   (setq org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled)
+
+   ;; make =todo-tags= search honor ~org-agenda-todo-ignore-scheduled~
+   (setq org-agenda-tags-todo-honor-ignore-options t)
+
+   ;; show agenda on entire window
+   (setq org-agenda-window-setup 'only-window)
+ #+end_src
+
+ #+RESULTS:
+ : only-window
+ 
+***** Agenda views
+     
+****** The agenda view                
+#+begin_src emacs-lisp
+  (setq org-agenda-custom-commands
+        ;; Active tasks view
+        '(("p" "Projects" tags-todo "LEVEL=2"
+           ((org-agenda-overriding-header "Active projects")
+            (org-agenda-files '("~/todo/projects.org"))
+            (org-agenda-sorting-strategy '(category-down todo-state-up priority-down))
+            (org-agenda-prefix-format " %i %-26:c")
+            (org-agenda-skip-function
+             '(org-agenda-skip-entry-if 'notregexp "\\* TODO\\|\\* ACTIVE|\\* NEXT"))))
+          ;; Quick tasks view
+          ("e" "Quick tasks (errands)" todo ""
+           ((org-agenda-files (list (concat elan/org-agenda-directory "errands.org")))))
+
+          ;; Inbox view
+          ("i" "Inbox" todo "TODO"
+           ((org-agenda-overriding-header "To Refile")
+            (org-agenda-files '( "~/todo/inbox.org"))))
+
+
+          ;; An overview. Daily agenda, active tasks, quick tasks (errands) and ongoing 
+          ("o" "Overview"
+           ((agenda " "
+                    ((org-agenda-span 1)))
+                     ;; (org-agenda-skip-function
+                    ;;  '(org-agenda-skip-entry-if 'notregexp "\\* TODO\\|\\* ACTIVE|\\* NEXT"))
+
+           ;; display today's schedule
+           (tags-todo "LEVEL=2"
+                      ((org-agenda-overriding-header "\nActive projects")
+                       (org-agenda-files '("~/todo/projects.org"))
+                       (org-agenda-sorting-strategy '(category-down priority-down))
+                       (org-agenda-todo-ignore-scheduled 'all)
+                       (org-agenda-prefix-format " %i %-20:c")
+                       (org-agenda-skip-function
+                        '(org-agenda-skip-entry-if 'notregexp "\\* TODO\\|\\* ACTIVE|\\* NEXT"))))
+           ;; ;; block for errands
+           (tags-todo "LEVEL=1"
+                      ((org-agenda-overriding-header "\nQuick tasks:")
+                       (org-agenda-sorting-strategy '(priority-down timestamp-up)) 
+                       (org-agenda-files '("~/todo/errands.org"))
+                       (org-agenda-prefix-format "    ") ;; set the prefix 
+                       (org-agenda-todo-ignore-scheduled 'all)
+                       (org-agenda-skip-function
+                        '(org-agenda-skip-entry-if 'notregexp "\\* TODO")))))
+          ;; options set below apply to the entire view
+          ((org-agenda-compact-blocks t)
+           (org-scheduled-past-days 7)))))
+          #+end_src
+
+      #+RESULTS:
+      | p | Projects              | tags-todo                                                                           | LEVEL=2 | ((org-agenda-overriding-header Active projects) (org-agenda-files '(~/todo/projects.org)) (org-agenda-sorting-strategy '(category-down todo-state-up priority-down)) (org-agenda-prefix-format  %i %-26:c) (org-agenda-skip-function '(org-agenda-skip-entry-if 'notregexp \* TODO\ | \* ACTIVE | \* NEXT))) |
+      | e | Quick tasks (errands) | todo                                                                                |         | ((org-agenda-files (list (concat elan/org-agenda-directory errands.org))))                                                                                                                                                                                                          |           |            |
+      | i | Inbox                 | todo                                                                                | TODO    | ((org-agenda-overriding-header To Refile) (org-agenda-files '(~/todo/inbox.org)))                                                                                                                                                                                                   |           |            |
+      | o | Overview              | ((agenda   ((org-agenda-span 1))) (tags-todo LEVEL=2 ((org-agenda-overriding-header |         |                                                                                                                                                                                                                                                                                     |           |            |
+
+
+      
+     
+****** COMMENT Some constants
+#+begin_src emacs-lisp :tangle yes
+       (setq default-displayed-keywords
+             (concat
+              "\\* "
+              (mapconcat
+               (lambda (x) (format "%S" x))
+               '(TODO URGENT ACTIVE NEXT) "\\|\\* ")))
+#+end_src
+
+#+RESULTS:
+: \* TODO\|\* URGENT\|\* ACTIVE\|\* NEXT
+
+
+
+#+RESULTS:
+: TODO\|\* URGENT\|\* ACTIVE\|\* NEXT
+
+****** COMMENT Function to check if entry's SCHEDULED is overdue 
+      #+begin_src emacs-lisp  
+        (defun elan/check-entry-overdue ()
+          (interactive)
+          (let* ((element (org-element-at-point))
+                 (scheduled (time-to-number-of-days (org-element-property :scheduled element)))
+                 (today (time-to-number-of-days (current-time))))
+            (if
+                (time-less-p today scheduled)
+                t)))
+                       #+end_src
+
+                       #+RESULTS:
+                       : elan/check-entry-overdue
+     
+******* COMMENT Debugging ~elan/check-entry-overdue~
+       #+begin_src emacs-lisp
+                (let* ((element (org-element-at-point))
+                       (scheduled (time-to-number-of-days (org-element-property :scheduled element))))
+                  (if (< scheduled (time-to-number-of-days (current-time)))
+                      (message
+                       (concat
+                        (number-to-string (time-to-number-of-days (current-time)))
+                  " is less than "
+                  (number-to-string  scheduled)))
+                    (message
+                     (concat
+                      (number-to-string (time-to-days (current-time)))
+                      " is greater than "
+                      (number-to-string  scheduled)))))
+       #+end_src
+
+       #+RESULTS:
+       : 19073.509876929194 is less than 19073.50987692906
+
+
+****** COMMENT Define views separately and then add them to =org-agenda-custom-commands=
+******* COMMENT Simple view
+   #+begin_src emacs-lisp
+     ;; Customized view for the daily workflow. (Command: "C-c a n")
+     (setq elan/org-agenda-view-simple
+           '("n" "Agenda / INTR / ACTIVE / NEXT"
+              ((agenda "" nil)
+               (todo "INTR" nil)
+               (todo "ACTIVE" nil)
+               (todo "NEXT" nil))
+              nil))
+
+             #+end_src
+
+       #+RESULTS:
+       | n | Agenda / INTR / ACTIVE / NEXT | ((agenda  nil) (todo INTR nil) (todo ACTIVE nil) (todo NEXT nil)) | nil |
+
+       #+begin_src emacs-lisp
+        
+
+       #+end_src
+******* COMMENT A more complex view from https://gist.github.com/jethrokuan/78936a44f249e2c1a61b5184669a32d7
+       #+begin_src emacs-lisp
+         (setq elan/org-agenda-view-extended
+               `("x" "Extended view"
+                 ((agenda ""
+                          ((org-agenda-span 'day)
+                           (org-deadline-warning-days 365)))
+                  (todo "TODO"
+                        ((org-agenda-overriding-header "To Refile")
+                         (org-agenda-files '(,(concat elan/org-agenda-directory "inbox.org")))
+                         )
+                        )
+                  ;; (todo "TODO"
+                  ;;       ((org-agenda-overriding-header "Emails")
+                  ;;        (org-agenda-files '(,(concat elan/org-agenda-directory "emails.org")))))
+                  ;; (todo "NEXT"
+                  ;;       ((org-agenda-overriding-header "In Progress")
+                  ;;        (org-agenda-files '(,(concat elan/org-agenda-directory "work.org")
+                  ;;                            ,(concat elan/org-agenda-directory "play.org")
+                  ;;                            ,(concat elan/org-agenda-directory "projects.org")))
+                  ;;        ))
+                  ;; (todo "TODO"
+                  ;;       ((org-agenda-overriding-header "Projects")
+                  ;;        (org-agenda-files '(,(concat elan/org-agenda-directory "projects.org")))
+                  ;;        ))
+                  ;; (todo "TODO"
+                  ;;       ((org-agenda-overriding-header "One-off Tasks")
+                  ;;        (org-agenda-files '(,(concat elan/org-agenda-directory "next.org")))
+                  ;;        (org-agenda-skip-function '(org-agenda-skip-entry-if 'deadline 'scheduled))))
+                  nil)))
+
+
+       #+end_src
+
+       #+RESULTS:
+       | x | Extended view | ((agenda  ((org-agenda-span 'day) (org-deadline-warning-days 365))) (todo TODO ((org-agenda-overriding-header To Refile) (org-agenda-files '(~/todo/inbox.org)))) nil) |
+
+******* COMMENT Add all views to =org-agenda-custom-commands= variable
+       #+begin_src emacs-lisp
+         (setq org-agenda-custom-commands nil)
+         (add-to-list 'org-agenda-custom-commands elan/org-agenda-view-simple)
+         (add-to-list 'org-agenda-custom-commands elan/org-agenda-view-extended)
+
+
+       #+end_src
+
+       #+RESULTS:
+       | x | Extended view                 | ((agenda  ((org-agenda-span 'day) (org-deadline-warning-days 365))) (todo TODO ((org-agenda-overriding-header To Refile) (org-agenda-files '(~/todo/inbox.org)))) nil) |     |
+       | n | Agenda / INTR / ACTIVE / NEXT | ((agenda  nil) (todo INTR nil) (todo ACTIVE nil) (todo NEXT nil))                                                                                                      | nil |
+
+**** Refiling
+#+begin_src emacs-lisp
+  ;; refile targets
+  (setq org-refile-targets
+        '((nil :level . 2) ;; all top and 2nd level headings in the current buffer 
+          (org-agenda-files :maxlevel . 9))) ;; any heading in any agenda file (in the ~/todo/ dir)
+
+  ;; refile options
+  (setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
+  (setq org-refile-use-outline-path 'file)                  ; Show full paths for refiling
+
+
+ #+end_src
+
+ #+RESULTS:
+ : file
+
+ 
+***** Allow refiling to any open file
+ #+begin_src emacs-lisp
+
+   ;; the following function allows returns a list of the buffers of all open files
+   ;; (defun +org/opened-buffer-files ()
+   ;;   "Return the list of files currently opened in emacs"
+   ;;   (delq nil
+   ;;         (mapcar (lambda (x)
+   ;;                   (if (and (buffer-file-name x)
+   ;;                            (string-match "\\.org$"
+   ;;                                          (buffer-file-name x)))
+   ;;                       (buffer-file-name x)))
+   ;;                 (buffer-list))))
+   ;; (setq org-refile-targets '((+org/opened-buffer-files :maxlevel . 9))) ;; allow refiling to any open file
+ #+end_src
+  #+RESULTS:
+  : file
+
+**** Capture templates
+    
+     
+      #+begin_src emacs-lisp
+                                (setq org-capture-templates
+                                      `(("i" "inbox"
+                                         entry (file ,(concat elan/org-agenda-directory "inbox.org"))
+                                         "* TODO %?")
+                                        ("e" "errands"
+                                         entry (file ,(concat elan/org-agenda-directory "errands.org"))
+                                       "* TODO %?")
+                                        ("s" "schedule"
+                                         entry (file ,(concat elan/org-agenda-directory "schedule.org"))
+                                         "\n\n** TODO %?\nSCHEDULED: %(org-time-stamp nil)")
+                                        ("n" "notes"
+                                         entry (file ,(concat elan/org-agenda-directory "notes.org"))
+                                         "* %?\n %T")))
+                                        ;; ("e" "email" entry (file+headline ,(concat elan/org-agenda-directory "emails.org") "Emails")
+                                         ;; "* TODO [#A] Reply: %a :@home:@school:" :immediate-finish t)
+                                        ;; ("l" "link" entry (file ,(concat elan/org-agenda-directory "inbox.org"))
+                                         ;; "* TODO %(org-cliplink-capture)" :immediate-finish t)
+                                        ;; ("c" "org-protocol-capture" entry (file ,(concat elan/org-agenda-directory "inbox.org"))
+                                         ;; "* TODO [[%:link][%:description]]\n\n %i" :immediate-finish t)
+
+
+    #+end_src
+
+    #+RESULTS:
+    | i | inbox    | entry | (file ~/todo/inbox.org)    | * TODO %? |
+    | e | errands  | entry | (file ~/todo/errands.org)  | * TODO %? |
+    | s | schedule | entry | (file ~/todo/schedule.org) |           |
+
+**** =TODO= keywords
+      #+begin_src emacs-lisp
+
+                                (setq org-todo-keywords
+                                      '((sequence "TODO(t)" "URGENT(u)" "NEXT(n)" "ONGOING(o)" "SOMEDAY(s)" "DONE(d)" "CANCELD(c)" )))
+                        (setq org-todo-keyword-faces
+                                   '(("TODO" . "ForestGreen")
+                                     ("ONGOING" . (:foreground "blue" :weight bold))
+                                     ("NEXT" . (:foreground "blue4" :weight bold) )
+                                     ("SOMEDAY" . "brown4")
+                                     ("CANCELD" . "DarkGray")))
+
+#+end_src
+
+#+RESULTS:
+: ((TODO . ForestGreen) (ONGOING :foreground blue :weight bold) (NEXT :foreground blue4 :weight bold) (SOMEDAY . brown4) (CANCELD . DarkGray))
+
+**** Tags
+    #+begin_src emacs-lisp
+             (setq org-tag-alist
+                   '(("@home" . ?h)
+                     ("@work" . ?w)
+                     ("@job-search" . ?j)
+                     ("@emacs" . ?e)
+                     ("@org" . ?o)))
+    #+end_src
+
+    #+RESULTS:
+    : ((@home . 104) (@work . 119) (@job-search . 106) (@emacs . 101) (@org . 111))
+     
+**** Misc.
+    
+***** Function to archive all DONE entries
+     #+begin_src emacs-lisp 
+       (defun org-archive-all-done (&optional tag)
+         "Archive sublevels of the current tree without open TODO items.
+       If the cursor is not on a headline, try all level 1 trees.  If
+       it is on a headline, try all direct children.
+       When TAG is non-nil, don't move trees, but mark them with the ARCHIVE tag."
+         (interactive)
+         (org-archive-all-matches
+          (lambda (_beg end)
+            (let ((case-fold-search nil))
+              (unless (re-search-forward org-not-done-heading-regexp end t)
+          "no open TODO items")))
+          tag))
+
+     #+end_src
+
+     #+RESULTS:
+     : org-archive-all-done
+
+**** Integrate google calendar
+
+    #+begin_src emacs-lisp
+(require 'org-gcal)
+(setq org-gcal-client-id "323947024319-h49lcfuq59a37ur43cg8mj6gc18c4e0i.apps.googleusercontent.com"
+      org-gcal-client-secret "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"
+      org-gcal-fetch-file-alist '(("braudelan@gmail.com" .  "~/todo/schedule.org")))
+(add-hook 'org-agenda-mode-hook (lambda () (org-gcal-sync) ))
+(add-hook 'org-capture-after-finalize-hook (lambda () (org-gcal-sync) ))
+    #+end_src
+
+    #+RESULTS:
+    | (lambda nil (org-gcal-sync)) | google-calendar/sync-cal-after-capture | org-gcal--capture-post |
+    
+*** Projects
+**** org-projectile setup
+   #+begin_src emacs-lisp
+     (require 'org-projectile)
+     (setq org-projectile-projects-file
+           (concat elan/org-agenda-directory "projects.org"))
+     (setq org-projectile-strategy #s(org-projectile-single-file-strategy))
+
+     (push (org-projectile-project-todo-entry) org-capture-templates)
+     (global-set-key (kbd "M-m p c") 'org-projectile-project-todo-completing-read)
+     (setq org-confirm-elisp-link-function nil) ;; dont prompt for confirmation when following the project header link
+#+end_src
+
+#+RESULTS:
+: org-projectile-project-todo-completing-read
+**** Capture template
+#+begin_src emacs-lisp
+  (setq org-projectile-capture-template
+        "* TODO %?\n")
+#+end_src
+
+#+RESULTS:
+: * TODO %?
+
+**** Known projects
+#+begin_src emacs-lisp
+                         (setq projectile-known-projects
+                               '("~/todo/"
+                                 "~/emacs-configs/.spacemacs/"
+                                 "~/job-search/"
+                                 "~/software-stuff/" "~/data-science/projects-to-share/"
+                                 "~/practicum/"
+                                 "~/emacs-configs/.spacemacs-vanila/"
+                                 "~/CV/"
+                                 "~/"
+                                 "~/software-stuff/emacs/"
+                                 "~/data-science/statistics/"
+                                 "~/software-stuff/org/"
+                                 "~/software-stuff/emacs/workflow/"
+                                 "~/software-stuff/ruby/"
+                                 "~/data-science/"
+                                 "~/emacs-configs/.spacemacs/user-config/"
+                                 "~/emacs-configs/"
+                                 "~/software-stuff/R-stuff/"
+                                 "~/software-stuff/clojure/"
+                                 "~/software-stuff/killing-tech-interviews/"
+                                 "~/data-science/bias-variance-tradeoff/"
+                                 "~/job-search/hosted-cv/"
+                                 "~/emacs-configs/.scimax/"
+                                 "~/emacs-configs/.space-clojure/"
+                                 "~/.emacs.d/"
+                                 "~/home-stuff/"))
+
+#+end_src
+
+#+RESULTS:
+| ~/todo/ | ~/emacs-configs/.spacemacs/ | ~/job-search/ | ~/software-stuff/ | ~/data-science/projects-to-share/ | ~/practicum/ | ~/emacs-configs/.spacemacs-vanila/ | ~/CV/ | ~/ | ~/software-stuff/emacs/ | ~/data-science/statistics/ | ~/software-stuff/org/ | ~/software-stuff/emacs/workflow/ | ~/software-stuff/ruby/ | ~/data-science/ | ~/emacs-configs/.spacemacs/user-config/ | ~/emacs-configs/ | ~/software-stuff/R-stuff/ | ~/software-stuff/clojure/ | ~/software-stuff/killing-tech-interviews/ | ~/data-science/bias-variance-tradeoff/ | ~/job-search/hosted-cv/ | ~/emacs-configs/.scimax/ | ~/emacs-configs/.space-clojure/ | ~/.emacs.d/ | ~/home-stuff/ |
+
+*****  COMMENT Wrapper for ~org-projectile-build-heading~
+     This adds an ACTIVE keyword before header of new project entry
+ #+begin_src emacs-lisp
+     
+      (defun elan/advice-org-projectile-build-heading (orig-fun &rest args)
+        (let ((heading (apply orig-fun args)))
+          (concat "ACTIVE " heading)))
+      (advice-add 'org-projectile-build-heading
+                  :around #'elan/advice-org-projectile-build-heading) ;; the wrapper is applied 
+ #+end_src
+
+
+ #+begin_src emacs-lisp
+  (stringp (concat elan/org-agenda-directory "projects.org"))
+ #+end_src
+
+ #+RESULTS:
+ : t
+
+*** Working with source code
+**** Yasnipt completion
+   #+begin_src emacs-lisp 
+;; fix some org-mode + yasnippet conflicts:
+(defun yas/org-very-safe-expand ()
+  (let ((yas/fallback-behavior 'return-nil)) (yas/expand)))
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            (make-variable-buffer-local 'yas/trigger-key)
+            (setq yas/trigger-key [tab])
+            (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand)
+            (define-key yas/keymap [tab] 'yas/next-field)))
+   #+end_src
+
+   #+RESULTS:
+   | (lambda nil (make-variable-buffer-local 'yas/trigger-key) (setq yas/trigger-key [tab]) (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand) (define-key yas/keymap [tab] 'yas/next-field)) | elan/set-bidi-direction | org-display-inline-images | jupyter-org-interaction-mode | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5]  | org-babel-result-hide-spec | org-babel-hide-all-hashes | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | flyspell-mode | spacemacs/org-setup-evil-surround | spacemacs/load-yasnippet | toc-org-enable | org-superstar-mode | org-download-enable | dotspacemacs//prettify-spacemacs-docs | spacemacs//org-babel-do-load-languages | spacemacs//evil-org-mode | org-eldoc-load | spacemacs//init-company-org-mode | company-mode |
+
+**** Org-babel 
+
+***** Setup
+    #+begin_src emacs-lisp
+
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((C . t)
+       (python . t)
+       (shell . t)
+       (plantuml . t)
+       (R . t)
+       (awk . t)
+       (clojure . t)
+       (ruby . t)
+       (jupyter . t)
+       )
+     )
+
+    (setq org-confirm-babel-evaluate nil)
+    (setq org-src-tab-acts-natively t )
+
+    (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)   
+    (add-hook 'org-mode-hook 'org-display-inline-images)
+
+          #+end_src
+
+          #+RESULTS:
+          | elan/set-default-pdf-viewer | elan/set-bidi-direction | org-display-inline-images | jupyter-org-interaction-mode | (lambda nil (make-variable-buffer-local 'yas/trigger-key) (setq yas/trigger-key [tab]) (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand) (define-key yas/keymap [tab] 'yas/next-field)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | flyspell-mode | spacemacs/org-setup-evil-surround | spacemacs/load-yasnippet | toc-org-enable | org-superstar-mode | org-download-enable | dotspacemacs//prettify-spacemacs-docs | spacemacs//org-babel-do-load-languages | spacemacs//evil-org-mode | org-eldoc-load | spacemacs//init-company-org-mode | company-mode |
+        
+***** Default header args
+    #+begin_src emacs-lisp 
+(setq org-babel-default-header-args:ruby
+    (cons '(:results . "output") 
+          (assq-delete-all :results org-babel-default-header-args:ruby)))
+          #+end_src
+
+    #+RESULTS:
+    : ((:results . output))
+
+**** Jupyter
+
+    
+***** COMMENT ~jupyter-org-interaction-mode-hook~
+    + Function to set TAB key behaviour:
+    #+begin_src emacs-lisp
+      (defun elan/set-tab-always-indent ()
+             "Set the behaviour of tab-always-indent"
+       (let (always-indent))
+             (setq tab-always-indent t))
+             #+end_src
+
+             #+RESULTS:
+             : elan/set-tab-always-indent
+             
+             #+begin_src emacs-lisp
+               (setq jupyter-org-interaction-mode-hook '(elan/set-tab-always-indent)) 
+                              
+    #+end_src
+
+    #+RESULTS:
+    | elan/set-tab-always-indent |
+
+***** Keybindings
+     #+begin_src emacs-lisp
+       ;; (jupyter-org-define-key (kbd "TAB") 'python-indent-line)
+       (jupyter-org-define-key (kbd "C-<return>") 'jupyter-org-execute-and-next-block)
+
+      #+end_src
+ 
+      #+RESULTS:
+      | menu-item |   | nil | :filter | #q[128 	\203 \302\207\303\300!\207 [[C-return] jupyter-org--defining-key-p undefined jupyter-org--define-key-filter] 3 |
+    
+***** COMMENT Set default source block header args for jupyter
+     #+begin_src emacs-lisp
+(setq org-babel-default-header-args:jupyter-python '((:async . "yes")
+                                                    (:session . "*py*")
+                                                    (:kernel . "practicum-env")))
+    
+
+     #+end_src
+
+     #+RESULTS:
+     : ((:async . yes) (:session . *py*) (:kernel . practicum-env))
+
+**** ESS-R
+   #+begin_src emacs-lisp
+     (add-to-list 'auto-mode-alist '("\\.md" . poly-markdown-mode))
+     (add-to-list 'auto-mode-alist '("\\.Snw" . poly-noweb+r-mode))
+     (add-to-list 'auto-mode-alist '("\\.Rnw" . poly-noweb+r-mode))
+     (add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown+r-mode))
+
+   #+end_src
+
+*** Org-mode
+**** Hook
+***** bidirectional typing
+    
+    #+begin_src emacs-lisp 
+      (defun elan/set-bidi-direction ()
+        (setq bidi-paragraph-direction nil))     
+    #+end_src
+
+    #+RESULTS:
+    : elan/set-bidi-direction
+***** Set default PDF viewer
+    #+begin_src emacs-lisp 
+      (defun elan/set-default-pdf-viewer ()
+        (delete '("\\.pdf\\'" . default) org-file-apps)
+               (add-to-list 'org-file-apps '("\\.pdf\\'" . "evince %s")))
+    #+end_src
+
+    #+RESULTS:
+    : elan/set-default-pdf-viewer
+    
+***** Add hooks
+    #+begin_src emacs-lisp
+      (add-hook 'org-mode-hook 'org-display-inline-images)
+      (add-hook 'org-mode-hook 'elan/set-bidi-direction)
+      (add-hook 'org-mode-hook 'elan/set-default-pdf-viewer)
+    #+end_src
+
+    #+RESULTS:
+    | elan/set-default-pdf-viewer | elan/set-bidi-direction | org-display-inline-images | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | flyspell-mode | spacemacs/org-setup-evil-surround | spacemacs/load-yasnippet | toc-org-enable | org-superstar-mode | org-download-enable | dotspacemacs//prettify-spacemacs-docs | spacemacs//org-babel-do-load-languages | spacemacs//evil-org-mode | org-eldoc-load | spacemacs//init-company-org-mode | company-mode |
+
+**** Export
+***** PDF 
+****** Syntax highlighting in Latex export
+     #+begin_src emacs-lisp
+ (require 'ox-latex)
+ (add-to-list 'org-latex-packages-alist '("" "minted"))
+ (setq org-latex-listings 'minted)
+
+ (setq org-latex-pdf-process
+       '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+         "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+         "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+
+
+     #+end_src
+
+     #+RESULTS:
+     | pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f | pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f | pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f |
+****** Export settings from [[https://www.geneatcg.com/emacs-org-mode-export-to-pdf/][Gene Ting-Chun Kao]]
+     #+begin_src emacs-lisp 
+ (setq org-latex-pdf-process
+          '("latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"))
+
+
+
+    (unless (boundp 'org-latex-classes)
+      (setq org-latex-classes nil))
+
+    (add-to-list 'org-latex-classes
+                 '("ethz"
+                   "\\documentclass[a4paper,11pt,titlepage]{memoir}
+    \\usepackage[utf8]{inputenc}
+    \\usepackage[T1]{fontenc}
+    \\usepackage{fixltx2e}
+    \\usepackage{graphicx}
+    \\usepackage{longtable}
+    \\usepackage{float}
+    \\usepackage{wrapfig}
+    \\usepackage{rotating}
+    \\usepackage[normalem]{ulem}
+    \\usepackage{amsmath}
+    \\usepackage{textcomp}
+    \\usepackage{marvosym}
+    \\usepackage{wasysym}
+    \\usepackage{amssymb}
+    \\usepackage{hyperref}
+    \\usepackage{mathpazo}
+    \\usepackage{color}
+    \\usepackage{enumerate}
+    \\definecolor{bg}{rgb}{0.95,0.95,0.95}
+    \\tolerance=1000
+          [NO-DEFAULT-PACKAGES]
+          [PACKAGES]
+          [EXTRA]
+    \\linespread{1.1}
+    \\hypersetup{pdfborder=0 0 0}"
+                   ("\\chapter{%s}" . "\\chapter*{%s}")
+                   ("\\section{%s}" . "\\section*{%s}")
+                   ("\\subsection{%s}" . "\\subsection*{%s}")
+                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                   ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                   ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
+
+    (add-to-list 'org-latex-classes
+                 '("article"
+                   "\\documentclass[11pt,a4paper]{article}
+    \\usepackage[utf8]{inputenc}
+    \\usepackage[T1]{fontenc}
+    \\usepackage{fixltx2e}
+    \\usepackage{graphicx}
+    \\usepackage{longtable}
+    \\usepackage{float}
+    \\usepackage{wrapfig}
+    \\usepackage{rotating}
+    \\usepackage[normalem]{ulem}
+    \\usepackage{amsmath}
+    \\usepackage{textcomp}
+    \\usepackage{marvosym}
+    \\usepackage{wasysym}
+    \\usepackage{amssymb}
+    \\usepackage{hyperref}
+    \\usepackage{mathpazo}
+    \\usepackage{color}
+    \\usepackage{enumerate}
+    \\definecolor{bg}{rgb}{0.95,0.95,0.95}
+    \\tolerance=1000
+          [NO-DEFAULT-PACKAGES]
+          [PACKAGES]
+          [EXTRA]
+    \\linespread{1.1}
+    \\hypersetup{pdfborder=0 0 0}"
+                   ("\\section{%s}" . "\\section*{%s}")
+                   ("\\subsection{%s}" . "\\subsection*{%s}")
+                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                   ("\\paragraph{%s}" . "\\paragraph*{%s}")))
+
+
+    (add-to-list 'org-latex-classes '("ebook"
+                                      "\\documentclass[11pt, oneside]{memoir}
+    \\setstocksize{9in}{6in}
+    \\settrimmedsize{\\stockheight}{\\stockwidth}{*}
+    \\setlrmarginsandblock{2cm}{2cm}{*} % Left and right margin
+    \\setulmarginsandblock{2cm}{2cm}{*} % Upper and lower margin
+    \\checkandfixthelayout
+    % Much more laTeX code omitted
+    "
+                                      ("\\chapter{%s}" . "\\chapter*{%s}")
+                                      ("\\section{%s}" . "\\section*{%s}")
+                                      ("\\subsection{%s}" . "\\subsection*{%s}")))
+     #+end_src
+
+     #+RESULTS:
+     | ebook | \documentclass[11pt, oneside]{memoir} |
+***** Reveal.js 
+**** Misc. 
+#+begin_src emacs-lisp
+
+  ;; Bidirectional writing mode
+  ;; (defun set-bidi-env ()
+  ;;   "interactive"
+  ;;   (setq bidi-paragraph-direction nil))
+  ;; (add-hook 'org-mode-hook 'set-bidi-env)
+
+  ;; reverse normal org-mode behaviour for M-RET key stroke
+  ;; (org-defkey org-mode-map [(meta return)] 'org-meta-return)
+
+  ;; Export modules
+  (setq org-plantuml-jar-path "~/plantuml.jar")
+
+  ;; A function to insert screenshots
+  (require 'org-attach-screenshot)
+
+  (add-to-list 'org-modules 'org-tempo t)
+  (require 'org-tempo)
+
+  ;; (setq org-bullets-bullet-list '("■" "◆" "▲" "▶"))
+
+  (setq org-clock-sound "~/Downloads/mixkit-cartoon-door-melodic-bell-110.wav")
+#+end_src
+
+***** COMMENT My org screenshot
+#+begin_src emacs-lisp
+     ;; insert screenshot function
+     (defun my-org-screenshot ()
+       "Take a screenshot into a time stamped unique-named file in the
+                          same directory as the org-buffer and insert a link to this file."
+       (interactive)
+       (setq initial-inline-size 450)
+       (setq filename
+             (concat
+              (make-temp-name
+               (concat (buffer-file-name)
+                       "_"
+                       (format-time-string "%Y%m%d_%H%M%S_")) ) ".png"))
+       (call-process "import" nil nil nil filename)
+       (insert (concat
+                "#+ATTR_ORG: :width "
+                (number-to-string initial-inline-size)))
+       (newline)
+       (insert (concat "[[" filename "]]"))
+       (org-display-inline-images))
+
+ #+end_src
+
+ #+RESULTS:
+ : ~/Downloads/mixkit-cartoon-door-melodic-bell-110.wav
+
+**** UI
+
+***** Startup options
+#+begin_src emacs-lisp 
+  (setq
+   org-adapt-indentation t
+   org-startup-indented t
+   org-hide-leading-stars t)
+#+end_src
+
+#+RESULTS:
+: t
+
+***** Hidden content symbol
+#+begin_src emacs-lisp 
+(setq org-ellipsis "->")
+#+end_src
+
+#+RESULTS:
+: ->
+
+*** Programming language modes
+**** Latex  
+ #+begin_src emacs-lisp
+
+   ;; compile tex as PDF
+   (setq TeX-PDF-mode t)
+   ;; view the pdf using evince
+   (setq TeX-view-program-selection '((output-pdf "Evince")))
+   ;; enable source specials or SyncTeX to be enable to compile it to a forward / backword searching.
+   (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
+
+   ;; always start emacs server when viewing in evince for backward search
+   (setq TeX-source-correlate-start-server t)
+ #+end_src
+
+**** Python
+elan/set-default-pdf-viewer
+***** Folding
+#+begin_src emacs-lisp
+  (add-hook 'python-mode-hook
+            (lambda () (hs-org/minor-mode)))
+#+end_src
+
+#+RESULTS:
+
+***** Formatting
+#+begin_src emacs-lisp
+  ;; (setq python-indent-offset 4)
+#+end_src
+
+#+RESULTS:
+: 4
+
+***** Syntax highlighting
+Add syntax highlighting for python f-strings
+#+begin_src emacs-lisp
+  (setq python-font-lock-keywords-maximum-decoration
+        (append python-font-lock-keywords-maximum-decoration
+            '(;; this is the full string.
+          ;; group 1 is the quote type and a closing quote is matched
+          ;; group 2 is the string part
+          ("f\\(['\"]\\{1,3\\}\\)\\(.+?\\)\\1"
+           ;; these are the {keywords}
+           ("{[^}]*?}"
+            ;; Pre-match form
+            (progn (goto-char (match-beginning 0)) (match-end 0))
+            ;; Post-match form
+            (goto-char (match-end 0))
+            ;; face for this match
+            (0 font-lock-variable-name-face t))))))
+#+end_src
+
+#+RESULTS:
+: ((\_<def[[:space:]]+\(\(?:[[:word:]]\|_\)+\) (1 font-lock-function-name-face)) (\_<class[[:space:]]+\(\(?:[[:word:]]\|_\)+\) (1 font-lock-type-face)) \_<\(?:and\|del\|from\|not\|while\|as\|elif\|global\|or\|with\|assert\|else\|if\|pass\|yield\|break\|except\|import\|class\|in\|raise\|continue\|finally\|is\|return\|def\|for\|lambda\|try\|print\|exec\|nonlocal\|async[[:space:]]+\(?:def\|for\|with\)\|await\|self\)\_> (\_<\(?:__\(?:\(?:a\(?:ll\|nnotations\)\|c\(?:\(?:losur\|od\)e\)\|d\(?:efaults\|ict\|oc\)\|globals\|import\|kwdefaults\|\(?:modul\|nam\|packag\|qualnam\)e\)__\)\|a\(?:bs\|ll\|ny\|pply\|scii\)\|b\(?:asestring\|in\|ool\|reakpoint\|uffer\|yte\(?:array\|s\)\)\|c\(?:allable\|hr\|lassmethod\|mp\|o\(?:erce\|mp\(?:ile\|lex\)\)\)\|d\(?:elattr\|i\(?:ct\|r\|vmod\)\)\|e\(?:numerate\|val\|xec\(?:file\)?\)\|f\(?:il\(?:e\|ter\)\|\(?:loa\|orma\|rozense\)t\)\|g\(?:etattr\|lobals\)\|h\(?:as\(?:attr\|h\)\|e\(?:lp\|x\)\)\|i\(?:d\|n\(?:put\|t\(?:ern\)?\)\|s\(?:instance\|subclass\)\|ter\)\|l\(?:en\|ist\|o\(?:cals\|ng\)\)\|m\(?:a[px]\|emoryview\|in\)\|next\|o\(?:bject\|ct\|pen\|rd\)\|p\(?:ow\|r\(?:int\|operty\)\)\|r\(?:a\(?:nge\|w_input\)\|e\(?:duce\|load\|pr\|versed\)\|ound\)\|s\(?:et\(?:attr\)?\|lice\|orted\|t\(?:aticmethod\|r\)\|u\(?:m\|per\)\)\|t\(?:\(?:upl\|yp\)e\)\|unic\(?:hr\|ode\)\|vars\|xrange\|zip\)\_> . font-lock-builtin-face) (\_<\(?:Ellipsis\|False\|No\(?:ne\|tImplemented\)\|True\|__debug__\|c\(?:opyright\|redits\)\|exit\|license\|quit\)\_> . font-lock-constant-face) (^[	 ]*\(@\(?:[[:word:]]\|_\)+\(?:\.\(?:[[:word:]]\|_\)+\)*\) (1 font-lock-type-face)) (\_<\(?:A\(?:\(?:rithmetic\|ssertion\|ttribute\)Error\)\|B\(?:aseException\|lockingIOError\|rokenPipeError\|ufferError\|ytesWarning\)\|C\(?:\(?:hildProcess\|onnection\(?:Aborted\|Re\(?:fused\|set\)\)?\)Error\)\|DeprecationWarning\|E\(?:OFError\|nvironmentError\|xception\)\|F\(?:ile\(?:\(?:Exists\|NotFound\)Error\)\|loatingPointError\|utureWarning\)\|GeneratorExit\|I\(?:OError\|mport\(?:Error\|Warning\)\|\(?:n\(?:de\(?:ntation\|x\)\|terrupted\)\|sADirectory\)Error\)\|Key\(?:Error\|boardInterrupt\)\|LookupError\|MemoryError\|N\(?:\(?:ame\|ot\(?:ADirectory\|Implemented\)\)Error\)\|O\(?:\(?:S\|verflow\)Error\)\|P\(?:e\(?:ndingDeprecationWarning\|rmissionError\)\|rocessLookupError\)\|R\(?:e\(?:cursionError\|ferenceError\|sourceWarning\)\|untime\(?:Error\|Warning\)\)\|S\(?:t\(?:andardError\|op\(?:\(?:Async\)?Iteration\)\)\|y\(?:ntax\(?:Error\|Warning\)\|stemE\(?:rror\|xit\)\)\)\|T\(?:\(?:ab\|imeout\|ype\)Error\)\|U\(?:n\(?:boundLocalError\|icode\(?:DecodeError\|E\(?:\(?:ncodeE\)?rror\)\|TranslateError\|Warning\)\)\|serWarning\)\|V\(?:\(?:MS\|alue\)Error\)\|W\(?:arning\|indowsError\)\|ZeroDivisionError\)\_> . font-lock-type-face) (#[257 \300\301\302\303#\211\262\203 \304 A@\204 `f\305\232\204 \207 [\([._[:word:]]+\)\(?:\[[^]]+]\)?[[:space:]]*\(?:\(?:\*\*\|//\|<<\|>>\|[%&*+/|^-]\)?=\) nil re-search-forward t syntax-ppss 61] 7 
+: 
+: (fn LIMIT)] (1 font-lock-variable-name-face nil nil)) (#[257 \300\301\302\303#\211\262\203 \304\225b\203 \305 A@\204 \207 [\([._[:word:]]+\)[[:space:]]*\(?:,[[:space:]]*[._[:word:]]+[[:space:]]*\)*,[[:space:]]*[._[:word:]]+[[:space:]]*\(?:\(?:\*\*\|//\|<<\|>>\|[%&*+/|^-]\)?=\) nil re-search-forward t 1 syntax-ppss] 7 
+: 
+: (fn LIMIT)] (1 font-lock-variable-name-face nil nil)) (f\(['"]\{1,3\}\)\(.+?\)\1 ({[^}]*?} (progn (goto-char (match-beginning 0)) (match-end 0)) (goto-char (match-end 0)) (0 font-lock-variable-name-face t))))
+
+***** Keybindings
+    #+begin_src emacs-lisp
+      ;; (define-key spacemacs-python-mode-map (kbd "C-c C-c") 'spacemacs/python-shell-send-buffer-switch)
+      (substitute-key-definition 'python-shell-send-buffer 'spacemacs/python-shell-send-buffer-switch python-mode-map)
+    #+end_src
+
+    #+RESULTS:
+
+***** COMMENT Code folding
+
+****** COMMENT From [[https://stackoverflow.com/a/1085551/10893900][this stackoverflow]]
+#+begin_src emacs-lisp
+  ;;======= Code folding =======
+(add-hook 'python-mode-hook 'my-python-outline-hook)
+; this gets called by outline to deteremine the level. Just use the length of the whitespace
+(defun py-outline-level ()
+  (let (buffer-invisibility-spec)
+    (save-excursion
+      (skip-chars-forward "    ")
+      (current-column))))
+; this get called after python mode is enabled
+(defun my-python-outline-hook ()
+  ; outline uses this regexp to find headers. I match lines with no indent and indented "class"
+  ; and "def" lines.
+  (setq outline-regexp "[^ \t]\\|[ \t]*\\(def\\|class\\) ")
+  ; enable our level computation
+  (setq outline-level 'py-outline-level)
+  ; do not use their \C-c@ prefix, too hard to type. Note this overides some bindings.
+  (setq outline-minor-mode-prefix "\C-t")
+  ; turn on outline mode
+  (outline-minor-mode t)
+  ; initially hide all but the headers
+  ;(hide-body)
+  ; make paren matches visible
+  (show-paren-mode 1)
+)
+#+end_src
+
+#+RESULTS:
+: my-python-outline-hook
+
+**** R
+   #+begin_src emacs-lisp
+          ;; (add-to-list 'auto-mode-alist '("\\.md" . poly-markdown-mode))
+          ;; (add-to-list 'auto-mode-alist '("\\.Snw" . poly-noweb+r-mode))
+          ;; (add-to-list 'auto-mode-alist '("\\.Rnw" . poly-noweb+r-mode))
+          ;; (add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown+r-mode))
+     (add-to-list 'auto-mode-alist
+                  '("\\.[rR]md\\'" . poly-gfm+r-mode))
+(setq markdown-code-block-braces t)
+          (require 'poly-R)
+   #+end_src
+
+   #+RESULTS:
+   : poly-R
+
+**** Clojure
+   
+***** COMMENT A ~smartparens~ configuration for clojure  I found [[https://joyheron.com/post/sketchnote/clojure-meetup/2017/08/17/spacemacs.html][here]]
+    #+begin_src emacs-lisp
+      ;; Setup smartparens
+        (add-hook 'clojure-mode-hook 'turn-on-smartparens-strict-mode)
+        (bind-keys
+         :map smartparens mode-map
+         ("C-M-a" . sp-beginning-of-sexp)
+         ("C-M-e" . sp-end-of-sexp)
+
+         ;("C-<down>" . sp-down-sexp)
+         ;("C-<up>"   . sp-up-sexp)
+         ;("M-<down>" . sp-backward-down-sexp)
+         ;("M-<up>"   . sp-backward-up-sexp)
+
+         ("C-M-f" . sp-forward-sexp)
+         ("C-M-b" . sp-backward-sexp)
+
+         ("C-M-n" . sp-next-sexp)
+         ("C-M-p" . sp-previous-sexp)
+
+         ("C-S-f" . sp-forward-symbol)
+         ("C-S-b" . sp-backward-symbol)
+
+         ("M-<right>" . sp-forward-slurp-sexp)
+         ("M-<left>" . sp-forward-barf-sexp)
+         ;("C-<left>"  . sp-backward-slurp-sexp)
+         ;("M-<left>"  . sp-backward-barf-sexp)
+
+         ("C-M-t" . sp-transpose-sexp)
+         ("C-M-k" . sp-kill-sexp)
+         ("C-k"   . sp-kill-hybrid-sexp)
+         ("M-k"   . sp-backward-kill-sexp)
+         ("C-M-w" . sp-copy-sexp)
+
+         ("C-M-d" . delete-sexp)
+
+         ("M-<backspace>" . backward-kill-word)
+         ("C-<backspace>" . sp-backward-kill-word)
+         ([remap sp-backward-kill-word] . backward-kill-word)
+
+         ("M-[" . sp-backward-unwrap-sexp)
+         ("M-]" . sp-unwrap-sexp)
+
+         ("C-x C-t" . sp-transpose-hybrid-sexp)
+
+         ("C-c ("  . wrap-with-parens)
+         ("C-c ["  . wrap-with-brackets)
+         ("C-c {"  . wrap-with-braces)
+         ("C-c '"  . wrap-with-single-quotes)
+         ("C-c \"" . wrap-with-double-quotes)
+         ("C-c _"  . wrap-with-underscores)
+         ("C-c `"  . wrap-with-back-quotes))
+    #+end_src
+
+    #+RESULTS:
+    : wrap-with-back-quotes
+
+*** Misc. functions
+  
+**** Make CV pdf from source org file
+   #+begin_src emacs-lisp
+     (defun elan/make-cv (tex-file)
+       "Export this (Org) buffer as TEX-FILE and compile TEX-FILE to pdf"
+       (interactive
+        (list
+         (read-file-name "Choose destination tex file (default is 'CV.tex'):" nil "CV.tex")
+         ;; (read-multiple-choice "Continue connecting?"
+         ;;                       '((?m "moderncv")
+         ;;                         (?w "awesomecv"))
+         ;;                       )
+         )
+        )
+        (org-export-to-file 'moderncv tex-file)
+       (org-latex-compile tex-file)
+       )
+
+   #+end_src
+
+   #+RESULTS:
+   : elan/make-cv
+
+**** COMMENT Other functions
+  #+begin_src emacs-lisp
+  (defun my-lookup (search-engine)
+    "Search word under cursor (or selected region), in SEARCH-ENGINE.
+          This command switches to browser."
+    (interactive (list
+                  (completing-read "Search engine: "
+                                   '(("https://www.google.com/search?channel=fs&client=ubuntu&q=")
+                                     ("https://scikit-learn.org/stable/search.html?q=")) nil t)))
+
+    (let (word)
+      (setq word
+            (if (use-region-p)
+                (buffer-substring-no-properties (region-beginning) (region-end))
+              (current-word)))
+      (browse-url (concat search-engine word))
+      )
+    )
+#+end_src
+
+***** My dictionary lookup
+#+begin_src emacs-lisp
+  ;; look-up dictionary
+  (require 'browse-url) ; part of gnu emacs
+
+  (defun my-lookup-dictionary ()
+    "Look up the word under cursor in Wikipedia.
+          If there is a text selection (a phrase), use that.
+
+          This command switches to browser."
+    (interactive)
+    (let (word)
+      (setq word
+            (if (use-region-p)
+                (buffer-substring-no-properties (region-beginning) (region-end))
+              (current-word)))
+      (setq word (replace-regexp-in-string " " "_" word))
+      (browse-url (concat "https://www.wordnik.com/words/" word)))
+    )
+  #+end_src
+ 
+*** COMMENT Dired 
+#+begin_src emacs-lisp
+  ;; Dired
+  ;; =====
+
+  ;; hide details by default (use '(' to show details)
+
+  ;; (defun elan/dired-setup ()
+  ;;   "Some personal configurations for dired mode"
+  ;;   (dired-hide-details-mode t)
+  ;;   (define-key dired-mode-map (kbd "M-<up>") 'dired-up-directory)
+  ;;   )
+  ;; (add-hook dired-mode-hook 'elan/dired-setup)
+
+  #+end_src
+  
+*** COMMENT EAF
+#+begin_src emacs-lisp
+(require 'eaf)
+(require 'eaf-browser)
+#+end_src
+
+#+RESULTS:
+: eaf-browser
+
+*** COMMENT SQL
+  
+  #+begin_src emacs-lisp 
+    (setq lsp-sqls-connections
+        '(((driver . "mysql") (dataSourceName . "elan:local@tcp(localhost:3306)"))
+          ;; ((driver . "postgresql") (dataSourceName . "host=127.0.0.1 port=5432 user=yyoncho password=local dbname=sammy sslmode=disable"))
+          ))
+  #+end_src
+
+  #+begin_src emacs-lisp
+(setq sql-connection-alist
+      '((pool-a
+         (sql-product 'mysql)
+         (sql-server "1.2.3.4")
+         (sql-user "elan")
+         (sql-password "alibaba@40")
+         (sql-database "database1")
+         (sql-port 3306))))
+
+  #+end_src
+*** COMMENT Context aware key bindings
+  #+begin_src emacs-lisp 
+
+    ;; (defmacro elan/define-conditional-keybind (keymap key def condition &optional mode)
+    ;;   "Define key with fallback. Binds KEY to definition DEF in keymap KEYMAP, 
+    ;;    the binding is active when the CONDITION is true. Otherwise turns MODE off 
+    ;;    and re-enables previous definition for KEY. If MODE is nil, tries to recover 
+    ;;    it by stripping off \"-map\" from KEYMAP name."
+    ;;   `(define-key ,keymap ,key
+    ;;      (lambda () (interactive)
+    ;;         (if ,condition ,def
+    ;;           (let* ((,(if mode mode
+    ;;                      (let* ((keymap-str (symbol-name keymap))
+    ;;                             (mode-name-end (- (string-width keymap-str) 4)))
+    ;;                        (if (string= "-map" (substring keymap-str mode-name-end))
+    ;;                            (intern (substring keymap-str 0 mode-name-end))
+    ;;                          (error "Could not deduce mode name from keymap name (\"-map\" missing?)")))) 
+    ;;                   nil)
+    ;;                  (original-func (key-binding ,key)))
+    ;;             (call-interactively original-func))))))
+
+    ;;     (elan/define-conditional-keybind
+    ;;         org-mode-map (kbd "C-<return>")
+    ;;         'jupyter-org-execute-and-next-block
+    ;;       (org-in-src-block-p))
+
+  #+end_src
+*** COMMENT Scribbles
+#+begin_src emacs-lisp
+  (concat dotspacemacs-directory "user-config.el")
+#+end_src
+
+#+RESULTS:
+: /home/elan/emacs-configs/.spacemacs-vanila/user-config/user-config.el
+
